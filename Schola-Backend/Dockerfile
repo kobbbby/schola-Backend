@@ -1,22 +1,16 @@
-# Stage 1: Build the Spring Boot application
-FROM eclipse-temurin:17-jdk AS build
-
+# Stage 1 — Build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
-
 COPY pom.xml .
-
+COPY mvnw .
+COPY mvnw.cmd .
+COPY .mvn .mvn
 COPY src ./src
-
+RUN chmod +x mvnw
 RUN ./mvnw clean package -DskipTests
 
-
-# Stage 2: Run the application
-FROM eclipse-temurin:17-jdk
-
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-
 COPY --from=build /app/target/*.jar app.jar
-
 EXPOSE 8080
-
 ENTRYPOINT ["java", "-jar", "app.jar"]

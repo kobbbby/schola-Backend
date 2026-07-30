@@ -30,7 +30,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
+        System.out.println(">>> Request: " + request.getMethod() + " " + request.getRequestURI());
+        System.out.println(">>> Auth header: " + authHeader);
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println(">>> No Bearer token found");
             filterChain.doFilter(request, response);
             return;
         }
@@ -38,20 +42,30 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         if (!jwtUtil.isTokenValid(token)) {
+            System.out.println(">>> Token invalid");
             filterChain.doFilter(request, response);
             return;
         }
 
         String userId = jwtUtil.extractUserId(token);
+        System.out.println(">>> Extracted userId: " + userId);
 
-        userRepository.findById(userId).ifPresent(user -> {
-            UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(
-                            user, null, Collections.emptyList()
-                    );
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        });
+        var userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            System.out.println(">>> User not found for id: " + userId);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        var user = userOpt.get();
+        System.out.println(">>> Found user: " + user.getEmail());
+
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(
+                        user, null, Collections.emptyList()
+                );
+        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
         filterChain.doFilter(request, response);
     }
