@@ -52,80 +52,95 @@ public class OnboardingController {
 
     // POST /onboarding/submit
     @PostMapping("/submit")
-    public ResponseEntity<AuthResponse.UserDto> submit(
+    public ResponseEntity<?> submit(
             @AuthenticationPrincipal User user,
             @RequestBody Map<String, Object> body) {
 
-        @SuppressWarnings("unchecked")
-        Map<String, List<String>> answers =
-                (Map<String, List<String>>) body.get("answers");
-
-        List<String> tags = new ArrayList<>();
-        String edu = null;
-
-        if (answers != null) {
-            // Education level
-            List<String> eduAnswer = answers.get("edu");
-            if (eduAnswer != null && !eduAnswer.isEmpty()) {
-                String eduId = eduAnswer.getFirst(); // can change code to get(0) if i first errors
-                edu = switch (eduId) {
-                    case "hs" -> "High School Senior";
-                    case "ug" -> "Undergraduate";
-                    case "gr" -> "Graduate";
-                    case "ph" -> "PhD";
-                    default   -> eduId;
-                };
-                tags.add(edu);
-            }
-
-            // Fields of interest
-            List<String> fields = answers.get("fields");
-            if (fields != null) {
-                for (String f : fields) {
-                    String label = switch (f) {
-                        case "stem" -> "STEM";
-                        case "biz"  -> "Business";
-                        case "arts" -> "Arts & Humanities";
-                        case "med"  -> "Medicine";
-                        case "law"  -> "Law";
-                        default     -> f;
-                    };
-                    tags.add(label);
-                }
-            }
-
-            // Traits
-            List<String> traits = answers.get("traits");
-            if (traits != null) {
-                for (String t : traits) {
-                    String label = switch (t) {
-                        case "fg"   -> "First-Generation";
-                        case "need" -> "Need-Based";
-                        case "intl" -> "International";
-                        case "cl"   -> "Community Leader";
-                        default     -> t;
-                    };
-                    tags.add(label);
-                }
-            }
+        // Safety check — if user is null token is missing or invalid
+        if (user == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("error", "Unauthorized — please sign in again"));
         }
 
-        // Save everything to the user
+        // Initialize tags safely
+        if (user.getTags() == null) {
+            user.setTags(new ArrayList<>());
+        }
+
+        List<String> tags = new ArrayList<>(user.getTags());
+        String edu = user.getEdu();
+
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, List<String>> answers =
+                    (Map<String, List<String>>) body.get("answers");
+
+            if (answers != null) {
+                List<String> eduAnswer = answers.get("edu");
+                if (eduAnswer != null && !eduAnswer.isEmpty()) {
+                    String eduId = eduAnswer.get(0);
+                    edu = switch (eduId) {
+                        case "hs" -> "High School Senior";
+                        case "ug" -> "Undergraduate";
+                        case "gr" -> "Graduate";
+                        case "ph" -> "PhD";
+                        default   -> eduId;
+                    };
+                    if (!tags.contains(edu)) tags.add(edu);
+                }
+
+                List<String> fields = answers.get("fields");
+                if (fields != null) {
+                    for (String f : fields) {
+                        String label = switch (f) {
+                            case "stem" -> "STEM";
+                            case "biz"  -> "Business";
+                            case "arts" -> "Arts & Humanities";
+                            case "med"  -> "Medicine";
+                            case "law"  -> "Law";
+                            default     -> f;
+                        };
+                        if (!tags.contains(label)) tags.add(label);
+                    }
+                }
+
+                List<String> traits = answers.get("traits");
+                if (traits != null) {
+                    for (String t : traits) {
+                        String label = switch (t) {
+                            case "fg"   -> "First-Generation";
+                            case "need" -> "Need-Based";
+                            case "intl" -> "International";
+                            case "cl"   -> "Community Leader";
+                            default     -> t;
+                        };
+                        if (!tags.contains(label)) tags.add(label);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error parsing answers: " + e.getMessage());
+        }
+
         user.setTags(tags);
         if (edu != null) user.setEdu(edu);
         user.setOnboarded(true);
 
-        // Calculate real profile completion
-        int completion = 50; // base
+        int completion = 50;
         if (!tags.isEmpty()) completion += 20;
         if (edu != null) completion += 10;
         user.setCompletion(completion);
 
-        // Calculate how many scholarships match this user
-        long matchCount = scholarshipService.getMatchesForUser(user).size();
-        user.setMatchCount((int) matchCount);
-
         User saved = userRepository.save(user);
+
+        try {
+            long matchCount = scholarshipService.getMatchesForUser(saved).size();
+            saved.setMatchCount((int) matchCount);
+            saved = userRepository.save(saved);
+        } catch (Exception e) {
+            System.out.println("Match error: " + e.getMessage());
+        }
+
         return ResponseEntity.ok(authService.buildUserDto(saved));
     }
 

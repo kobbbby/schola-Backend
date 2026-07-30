@@ -12,36 +12,39 @@ public class MatchingService {
     // calculates a score based on how well
     // the user's profile matches each scholarship
     public int calculateMatch(User user, Scholarship scholarship) {
+        if (user == null || scholarship == null) return 0;
+
+        List<String> userTags = user.getTags();
+        if (userTags == null) userTags = new java.util.ArrayList<>();
+
         int score = 0;
         int total = 0;
 
-        List<String> userTags = user.getTags() != null ? user.getTags() : new java.util.ArrayList<>();
-
-        // ── Field of study match (40 points) ──────────────
-        if (scholarship.getFields() != null
-                && !scholarship.getFields().isEmpty()
-                && user.getTags() != null) {
+        // Field match (40 points)
+        List<String> fields = scholarship.getFields();
+        if (fields != null && !fields.isEmpty()) {
             total += 40;
-            boolean fieldMatch = scholarship.getFields().stream()
-                    .anyMatch(f -> user.getTags().stream()
-                            .anyMatch(t -> t.equalsIgnoreCase(f)));
+            final List<String> finalTags = userTags;
+            boolean fieldMatch = fields.stream()
+                    .anyMatch(f -> finalTags.stream()
+                            .anyMatch(t -> t != null && t.equalsIgnoreCase(f)));
             if (fieldMatch) score += 40;
         }
 
-        // ── Trait match (30 points) ────────────────────────
-        if (scholarship.getTraits() != null
-                && !scholarship.getTraits().isEmpty()
-                && user.getTags() != null) {
+        // Trait match (30 points)
+        List<String> traits = scholarship.getTraits();
+        if (traits != null && !traits.isEmpty()) {
             total += 30;
-            long matchCount = scholarship.getTraits().stream()
-                    .filter(t -> user.getTags().stream()
-                            .anyMatch(ut -> ut.equalsIgnoreCase(t)))
+            final List<String> finalTags = userTags;
+            long matchCount = traits.stream()
+                    .filter(t -> finalTags.stream()
+                            .anyMatch(ut -> ut != null && ut.equalsIgnoreCase(t)))
                     .count();
-            double traitScore = (double) matchCount / scholarship.getTraits().size() * 30;
+            double traitScore = (double) matchCount / traits.size() * 30;
             score += (int) traitScore;
         }
 
-        // ── GPA match (20 points) ──────────────────────────
+        // GPA match (20 points)
         if (scholarship.getMinGpa() > 0 && user.getGpa() != null) {
             total += 20;
             try {
@@ -51,7 +54,7 @@ public class MatchingService {
             } catch (NumberFormatException ignored) {}
         }
 
-        // ── Education level match (10 points) ─────────────
+        // Education match (10 points)
         if (scholarship.getEduLevel() != null && !scholarship.getEduLevel().isEmpty()) {
             total += 10;
             if (scholarship.getEduLevel().equalsIgnoreCase(user.getEdu())) {
@@ -59,8 +62,7 @@ public class MatchingService {
             }
         }
 
-        // ── Return percentage ──────────────────────────────
-        if (total == 0) return 75; // default if no criteria
+        if (total == 0) return 75;
         return Math.min(100, (int) ((double) score / total * 100));
     }
 

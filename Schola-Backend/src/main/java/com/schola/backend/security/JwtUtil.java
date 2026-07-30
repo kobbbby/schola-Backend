@@ -17,10 +17,17 @@ public class JwtUtil {
 
     @Value("${jwt.expiration}")
     private long expiration;
-
     private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        // Ensure key is at least 256 bits (32 bytes) for HS256
+        if (keyBytes.length < 32) {
+            byte[] paddedKey = new byte[32];
+            System.arraycopy(keyBytes, 0, paddedKey, 0, keyBytes.length);
+            return Keys.hmacShaKeyFor(paddedKey);
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
+
 
     public String generateToken(String userId) {
         return Jwts.builder()
@@ -40,6 +47,7 @@ public class JwtUtil {
             getClaims(token);
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }

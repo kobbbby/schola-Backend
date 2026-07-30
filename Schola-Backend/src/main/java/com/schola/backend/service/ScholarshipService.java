@@ -16,15 +16,22 @@ public class ScholarshipService {
     private final MatchingService matchingService;
 
     public List<ScholarshipDto> getMatchesForUser(User user) {
-           if(user.getTags() == null){
-               user.setTags(new java.util.ArrayList<>());
-           }
-           List<Scholarship> all = scholarshipRepository.findByActiveTrue();
-        List<Scholarship> sorted = matchingService.sortByMatch(all, user);
-        return sorted.stream()
-                .map(s -> toDto(s, matchingService.calculateMatch(user, s)))
-                .filter(s -> s.getMatch() >= 50)
-                .toList();
+        if (user == null) return new java.util.ArrayList<>();
+        if (user.getTags() == null) user.setTags(new java.util.ArrayList<>());
+
+        try {
+            List<Scholarship> all = scholarshipRepository.findByActiveTrue();
+            if (all == null || all.isEmpty()) return new java.util.ArrayList<>();
+
+            List<Scholarship> sorted = matchingService.sortByMatch(all, user);
+            return sorted.stream()
+                    .map(s -> toDto(s, matchingService.calculateMatch(user, s)))
+                    .filter(s -> s.getMatch() >= 50)
+                    .toList();
+        } catch (Exception e) {
+            System.out.println("Error getting matches: " + e.getMessage());
+            return new java.util.ArrayList<>();
+        }
     }
 
     public List<ScholarshipDto> getAllScholarships() {
