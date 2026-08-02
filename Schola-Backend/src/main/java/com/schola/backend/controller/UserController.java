@@ -3,6 +3,7 @@ package com.schola.backend.controller;
 import com.schola.backend.dto.AuthResponse;
 import com.schola.backend.dto.ScholarshipDto;
 import com.schola.backend.entity.User;
+import com.schola.backend.repository.SavedScholarshipRepository;
 import com.schola.backend.repository.UserRepository;
 import com.schola.backend.service.AuthService;
 import com.schola.backend.service.ScholarshipService;
@@ -22,6 +23,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final AuthService authService;
     private final ScholarshipService scholarshipService;
+    private final SavedScholarshipRepository savedRepository;
 
     // GET /users/me/profile
     @GetMapping("/profile")
@@ -29,8 +31,12 @@ public class UserController {
             @AuthenticationPrincipal User user) {
         if (user.getTags() == null) {
             user.setTags(new ArrayList<>());
-            userRepository.save(user);
         }
+        // Update saved count from actual saved records
+        long actualSavedCount = savedRepository.findByUser(user).size();
+        user.setSavedCount((int) actualSavedCount);
+        userRepository.save(user);
+
         return ResponseEntity.ok(authService.buildUserDto(user));
     }
 
