@@ -32,9 +32,8 @@ build/
 
 ### VS Code ###
 .vscode/
-
- .env
- target/
+*.env
+target/
 .git/
 *.md
 application-local.yml
