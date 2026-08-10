@@ -144,7 +144,7 @@ public class ForgotPasswordController {
 
         // Send confirmation email
         try {
-            emailService.sendPasswordResetConfirmation(user.getEmail(), user.getName());
+            emailService.sendPasswordResetConfirmation(user.getEmail(), user.getFullName());
         } catch (Exception e) {
             System.err.println("Confirmation email failed: " + e.getMessage());
         }
