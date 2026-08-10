@@ -22,13 +22,17 @@ public class AuthService {
             throw new RuntimeException("An account with this email already exists.");
         }
 
-        String initials = generateInitials(request.getName());
+        String firstName = extractFirstName(request);
+        String lastName = extractLastName(request);
+        String fullName = buildFullName(firstName, lastName, request.getName());
 
         User user = User.builder()
-                .name(request.getName())
+                .firstName(firstName)
+                .lastName(lastName)
+                .name(fullName)
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .initials(initials)
+                .initials(generateInitials(fullName))
                 .onboarded(false)
                 .completion(45)
                 .build();
@@ -62,10 +66,51 @@ public class AuthService {
         }
         return initials.toString().toUpperCase().substring(0, Math.min(2, initials.length()));
     }
+
+    private String extractFirstName(AuthRequest request) {
+        if (request.getFirstName() != null && !request.getFirstName().trim().isEmpty()) {
+            return request.getFirstName().trim();
+        }
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            String[] parts = request.getName().trim().split(" ");
+            return parts.length > 0 ? parts[0] : request.getName().trim();
+        }
+        return null;
+    }
+
+    private String extractLastName(AuthRequest request) {
+        if (request.getLastName() != null && !request.getLastName().trim().isEmpty()) {
+            return request.getLastName().trim();
+        }
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            String[] parts = request.getName().trim().split(" ");
+            if (parts.length > 1) {
+                StringBuilder last = new StringBuilder();
+                for (int i = 1; i < parts.length; i++) {
+                    if (last.length() > 0) {
+                        last.append(" ");
+                    }
+                    last.append(parts[i]);
+                }
+                return last.toString();
+            }
+        }
+        return null;
+    }
+
+    private String buildFullName(String firstName, String lastName, String fallbackName) {
+        String combined = ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();
+        if (!combined.isEmpty()) {
+            return combined;
+        }
+        return fallbackName != null ? fallbackName.trim() : "";
+    }
     public AuthResponse.UserDto buildUserDto(User user) {
         return AuthResponse.UserDto.builder()
                 .id(user.getId())
-                .name(user.getName())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .name(user.getFullName())
                 .email(user.getEmail())
                 .initials(user.getInitials())
                 .completion(user.getCompletion())

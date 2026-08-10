@@ -21,7 +21,9 @@ public class AuthResponse {
     @AllArgsConstructor
     public static class UserDto {
         private String id;
-        private String name;
+        private String firstName;
+        private String lastName;
+        private String name; // leaving this guy so it doesn't break cos i still need to update the frontend
         private String email;
         private String initials;
         private int completion;
