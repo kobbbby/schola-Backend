@@ -25,6 +25,12 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
     @Column(nullable = false)
     private String name;
 
@@ -67,4 +73,12 @@ public class User {
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public String getFullName() {
+        String combined = ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();
+        if (!combined.isEmpty()) {
+            return combined;
+        }
+        return name != null ? name : "";
+    }
 }
