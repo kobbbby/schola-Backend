@@ -8,6 +8,10 @@ import lombok.Data;
 @Data
 public class AuthRequest {
 
+    private String firstName;
+    private String lastName;
+
+    // Legacy single-name payload support for backward compatibility.
     private String name;
 
     @NotBlank(message = "Email is required")
