@@ -144,7 +144,10 @@ public class ForgotPasswordController {
 
         // Send confirmation email
         try {
-            emailService.sendPasswordResetConfirmation(user.getEmail(), user.getFullName());
+            emailService.sendPasswordResetConfirmation(
+                    user.getEmail(),
+                    getFirstNameOrFallback(user)
+            );
         } catch (Exception e) {
             System.err.println("Confirmation email failed: " + e.getMessage());
         }
@@ -152,5 +155,15 @@ public class ForgotPasswordController {
         return ResponseEntity.ok(Map.of(
                 "message", "Password reset successfully. You can now sign in"
         ));
+    }
+
+    private String getFirstNameOrFallback(User user) {
+        if (user.getFirstName() != null && !user.getFirstName().isBlank()) {
+            return user.getFirstName();
+        }
+        if (user.getFullName() != null && !user.getFullName().isBlank()) {
+            return user.getFullName();
+        }
+        return user.getEmail();
     }
 }
