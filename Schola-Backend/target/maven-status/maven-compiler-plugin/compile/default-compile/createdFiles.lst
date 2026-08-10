@@ -1,4 +1,5 @@
 com\schola\backend\config\SecurityConfig.class
+com\schola\backend\controller\CategoryController.class
 com\schola\backend\controller\AuthController.class
 com\schola\backend\dto\ScholarshipDto.class
 com\schola\backend\service\ScholarshipService.class
@@ -8,6 +9,7 @@ com\schola\backend\BackendApplication.class
 com\schola\backend\controller\SavedController.class
 com\schola\backend\entity\User.class
 com\schola\backend\entity\OnboardingStep$OnboardingOption.class
+com\schola\backend\controller\OnboardingController.class
 com\schola\backend\dto\AuthResponse$UserDto.class
 com\schola\backend\dto\AuthResponse$UserDto$UserDtoBuilder.class
 com\schola\backend\entity\SavedScholarship$SavedScholarshipBuilder.class
@@ -21,6 +23,7 @@ com\schola\backend\dto\AuthResponse$Stats$StatsBuilder.class
 com\schola\backend\entity\Scholarship.class
 com\schola\backend\dto\AuthRequest.class
 com\schola\backend\entity\Scholarship$ScholarshipBuilder.class
+com\schola\backend\controller\ForgotPasswordController.class
 com\schola\backend\service\AuthService.class
 com\schola\backend\service\MatchingService.class
 com\schola\backend\entity\SavedScholarship.class
@@ -29,6 +32,7 @@ com\schola\backend\config\DataSeeder.class
 com\schola\backend\dto\AuthResponse.class
 com\schola\backend\repository\SavedScholarshipRepository.class
 com\schola\backend\repository\ScholarshipRepository.class
+com\schola\backend\service\EmailService.class
 com\schola\backend\controller\ScholarshipController.class
 com\schola\backend\dto\AuthResponse$Stats.class
 com\schola\backend\security\JwtUtil.class
