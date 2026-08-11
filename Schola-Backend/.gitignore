@@ -1,10 +1,11 @@
 HELP.md
 
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+!/src/main//target/
+!/src/test/
 
-### STS ###
+Spring Tool Suite (STS)
+
 .apt_generated
 .classpath
 .factorypath
@@ -13,28 +14,26 @@ HELP.md
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
+IntelliJ IDEA
+
 .idea/
 *.class
 *.iws
 *.iml
 *.ipr
 target/
-.git/
-*.md
-.gitignore
-application.yaml
 
-### NetBeans ###
+NetBeans
+
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
+Environment Variables
 
-### Environment Variable ###
 .env
+.env.*
+!.env.example
