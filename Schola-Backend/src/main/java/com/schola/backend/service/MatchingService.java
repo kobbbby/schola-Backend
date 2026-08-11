@@ -3,19 +3,18 @@ package com.schola.backend.service;
 import com.schola.backend.entity.Scholarship;
 import com.schola.backend.entity.User;
 import org.springframework.stereotype.Service;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class MatchingService {
 
-    // This is the real matching algorithm —
-    // calculates a score based on how well
-    // the user's profile matches each scholarship
     public int calculateMatch(User user, Scholarship scholarship) {
         if (user == null || scholarship == null) return 0;
 
-        List<String> userTags = user.getTags();
-        if (userTags == null) userTags = new java.util.ArrayList<>();
+        List<String> userTags = user.getTags() != null
+                ? user.getTags()
+                : new ArrayList<>();
 
         int score = 0;
         int total = 0;
@@ -24,10 +23,10 @@ public class MatchingService {
         List<String> fields = scholarship.getFields();
         if (fields != null && !fields.isEmpty()) {
             total += 40;
-            final List<String> finalTags = userTags;
             boolean fieldMatch = fields.stream()
-                    .anyMatch(f -> finalTags.stream()
-                            .anyMatch(t -> t != null && t.equalsIgnoreCase(f)));
+                    .anyMatch(f -> userTags.stream()
+                            .anyMatch(t -> t != null
+                                    && t.equalsIgnoreCase(f)));
             if (fieldMatch) score += 40;
         }
 
@@ -35,10 +34,10 @@ public class MatchingService {
         List<String> traits = scholarship.getTraits();
         if (traits != null && !traits.isEmpty()) {
             total += 30;
-            final List<String> finalTags = userTags;
             long matchCount = traits.stream()
-                    .filter(t -> finalTags.stream()
-                            .anyMatch(ut -> ut != null && ut.equalsIgnoreCase(t)))
+                    .filter(t -> userTags.stream()
+                            .anyMatch(ut -> ut != null
+                                    && ut.equalsIgnoreCase(t)))
                     .count();
             double traitScore = (double) matchCount / traits.size() * 30;
             score += (int) traitScore;
@@ -54,8 +53,9 @@ public class MatchingService {
             } catch (NumberFormatException ignored) {}
         }
 
-        // Education match (10 points)
-        if (scholarship.getEduLevel() != null && !scholarship.getEduLevel().isEmpty()) {
+        // Education level match (10 points)
+        if (scholarship.getEduLevel() != null
+                && !scholarship.getEduLevel().isEmpty()) {
             total += 10;
             if (scholarship.getEduLevel().equalsIgnoreCase(user.getEdu())) {
                 score += 10;
@@ -68,7 +68,7 @@ public class MatchingService {
 
     public List<Scholarship> sortByMatch(List<Scholarship> scholarships, User user) {
         return scholarships.stream()
-                .sorted((a,b) ->  calculateMatch(user,b) - calculateMatch(user,a))
+                .sorted((a, b) -> calculateMatch(user,b) - calculateMatch(user,a))
                 .toList();
     }
 }

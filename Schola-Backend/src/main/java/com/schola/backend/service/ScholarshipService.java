@@ -6,6 +6,7 @@ import com.schola.backend.entity.User;
 import com.schola.backend.repository.ScholarshipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -16,21 +17,20 @@ public class ScholarshipService {
     private final MatchingService matchingService;
 
     public List<ScholarshipDto> getMatchesForUser(User user) {
-        if (user == null) return new java.util.ArrayList<>();
-        if (user.getTags() == null) user.setTags(new java.util.ArrayList<>());
+        if (user == null) return new ArrayList<>();
+        if (user.getTags() == null) user.setTags(new ArrayList<>());
 
         try {
             List<Scholarship> all = scholarshipRepository.findByActiveTrue();
-            if (all == null || all.isEmpty()) return new java.util.ArrayList<>();
+            if (all == null || all.isEmpty()) return new ArrayList<>();
 
-            List<Scholarship> sorted = matchingService.sortByMatch(all, user);
-            return sorted.stream()
+            return all.stream()
                     .map(s -> toDto(s, matchingService.calculateMatch(user, s)))
                     .filter(s -> s.getMatch() >= 50)
+                    .sorted((a, b) -> b.getMatch() - a.getMatch())
                     .toList();
         } catch (Exception e) {
-            System.out.println("Error getting matches: " + e.getMessage());
-            return new java.util.ArrayList<>();
+            return new ArrayList<>();
         }
     }
 
@@ -44,23 +44,26 @@ public class ScholarshipService {
     public ScholarshipDto getById(String id, User user) {
         Scholarship s = scholarshipRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Scholarship not found"));
-
-        // Calculate real match for this specific user
         int match = 0;
         if (user != null) {
-            if (user.getTags() == null) {
-                user.setTags(new java.util.ArrayList<>());
-            }
+            if (user.getTags() == null) user.setTags(new ArrayList<>());
             match = matchingService.calculateMatch(user, s);
-            return toDto(s, match);
         }
         return toDto(s, match);
     }
 
     public List<ScholarshipDto> search(String query, User user) {
+        if (user != null && user.getTags() == null) {
+            user.setTags(new ArrayList<>());
+        }
         return scholarshipRepository.searchByTitle(query)
                 .stream()
-                .map(s -> toDto(s, user != null ? matchingService.calculateMatch(user, s) : 0))
+                .map(s -> {
+                    int match = user != null
+                            ? matchingService.calculateMatch(user, s)
+                            : 0;
+                    return toDto(s, match);
+                })
                 .toList();
     }
 
@@ -70,7 +73,7 @@ public class ScholarshipService {
                 .title(s.getTitle())
                 .amount(s.getAmount())
                 .deadline(s.getDeadline())
-                .tags(s.getTags())
+                .tags(s.getTags() != null ? s.getTags() : new ArrayList<>())
                 .match(match)
                 .about(s.getAbout())
                 .eligibility(s.getEligibility())

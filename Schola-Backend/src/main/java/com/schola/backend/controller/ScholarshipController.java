@@ -20,6 +20,7 @@ public class ScholarshipController {
     @GetMapping("/users/me/matches")
     public ResponseEntity<List<ScholarshipDto>> getMatches(
             @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(scholarshipService.getMatchesForUser(user));
     }
 
@@ -43,6 +44,6 @@ public class ScholarshipController {
     public ResponseEntity<ScholarshipDto> getById(
             @PathVariable String id,
             @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(scholarshipService.getById(id,user));
+        return ResponseEntity.ok(scholarshipService.getById(id, user));
     }
 }

@@ -19,11 +19,11 @@ HELP.md
 *.iws
 *.iml
 *.ipr
-
 target/
 .git/
 *.md
-application-local.yaml
+.gitignore
+application.yaml
 
 ### NetBeans ###
 /nbproject/private/
@@ -36,5 +36,5 @@ build/
 !**/src/test/**/build/
 
 
-### Environment ###
+### Environment Variable ###
 .env

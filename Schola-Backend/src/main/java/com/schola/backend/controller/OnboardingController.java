@@ -56,13 +56,11 @@ public class OnboardingController {
             @AuthenticationPrincipal User user,
             @RequestBody Map<String, Object> body) {
 
-        // Safety check — if user is null token is missing or invalid
         if (user == null) {
             return ResponseEntity.status(401)
-                    .body(Map.of("error", "Unauthorized — please sign in again"));
+                    .body(Map.of("error", "Unauthorized"));
         }
 
-        // Initialize tags safely
         if (user.getTags() == null) {
             user.setTags(new ArrayList<>());
         }
@@ -76,6 +74,7 @@ public class OnboardingController {
                     (Map<String, List<String>>) body.get("answers");
 
             if (answers != null) {
+                // Education level
                 List<String> eduAnswer = answers.get("edu");
                 if (eduAnswer != null && !eduAnswer.isEmpty()) {
                     String eduId = eduAnswer.get(0);
@@ -89,6 +88,7 @@ public class OnboardingController {
                     if (!tags.contains(edu)) tags.add(edu);
                 }
 
+                // Fields
                 List<String> fields = answers.get("fields");
                 if (fields != null) {
                     for (String f : fields) {
@@ -104,6 +104,7 @@ public class OnboardingController {
                     }
                 }
 
+                // Traits
                 List<String> traits = answers.get("traits");
                 if (traits != null) {
                     for (String t : traits) {
@@ -126,10 +127,12 @@ public class OnboardingController {
         if (edu != null) user.setEdu(edu);
         user.setOnboarded(true);
 
+        // Calculate completion
         int completion = 50;
         if (!tags.isEmpty()) completion += 20;
         if (edu != null) completion += 10;
-        user.setCompletion(completion);
+        if (user.getGpa() != null) completion += 10;
+        user.setCompletion(Math.min(100, completion));
 
         User saved = userRepository.save(user);
 
