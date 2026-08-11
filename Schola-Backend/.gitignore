@@ -19,7 +19,7 @@ HELP.md
 *.iws
 *.iml
 *.ipr
-*.env
+
 target/
 .git/
 *.md
@@ -36,13 +36,5 @@ build/
 !**/src/test/**/build/
 
 
-
-### VS Code ###
-.vscode/
-
-
-
- target/
-.git/
-*.md
-application-local.yaml
+### Environment ###
+.env
