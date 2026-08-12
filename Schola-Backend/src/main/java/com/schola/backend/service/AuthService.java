@@ -18,15 +18,44 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public AuthResponse signUp(AuthRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("An account with this email already exists.");
+
+        // Validate email format
+        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+        if (!request.getEmail().matches(emailRegex)) {
+            throw new RuntimeException("Please enter a valid email address.");
+        }
+
+        // Check if email already exists in database
+        if (userRepository.existsByEmail(
+                request.getEmail().toLowerCase().trim())) {
+            throw new RuntimeException(
+                    "An account with this email already exists. Please sign in instead."
+            );
+        }
+
+        // Validate password strength
+        String pw = request.getPassword();
+        if (pw.length() < 8) {
+            throw new RuntimeException(
+                    "Password must be at least 8 characters."
+            );
+        }
+        if (!pw.matches(".*[A-Z].*")) {
+            throw new RuntimeException(
+                    "Password must contain at least one uppercase letter."
+            );
+        }
+        if (!pw.matches(".*[0-9].*")) {
+            throw new RuntimeException(
+                    "Password must contain at least one number."
+            );
         }
 
         String initials = generateInitials(request.getName());
 
         User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
+                .name(request.getName().trim())
+                .email(request.getEmail().toLowerCase().trim())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .initials(initials)
                 .onboarded(false)
@@ -35,7 +64,6 @@ public class AuthService {
 
         User saved = userRepository.save(user);
         String token = jwtUtil.generateToken(saved.getId());
-
         return buildAuthResponse(token, saved);
     }
 

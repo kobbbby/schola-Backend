@@ -32,8 +32,7 @@ NetBeans
 /.nb-gradle/
 build/
 
-Environment Variables
-
+##Environment Variables##
 .env
 .env.*
 !.env.example
